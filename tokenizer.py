@@ -1,3 +1,4 @@
+
 class JsonToken:
     STRING = 0
     NUMBER = 1
@@ -8,12 +9,21 @@ class JsonToken:
     COLON = 6
     BOOLEAN = 7
     NULL = 8
+    COMMA = 9
     
     def __init__(self, kind, text):
         self.kind = kind
         self.text = text
     def __str__(self):
         return str(self.kind)
+    
+    @property
+    def text(self):
+        return self.text
+    
+    @property
+    def kind(self):
+        return self.kind
     
 class Tokenizer:
     def __init__(self,jsonString):
@@ -23,65 +33,68 @@ class Tokenizer:
     def tokenize(self):
         exit = False
         result = []
-        try:
-            while not exit:        
-                if self.jsonString[self.idx] == '{':
-                    result.append(self.processLeftCurly())
-                elif self.jsonString[self.idx] == '}':
-                    result.append(self.processRightCurly())
-                elif self.jsonString[self.idx] == '"':                
-                    result.append(self.processString())
-                elif self.jsonString[self.idx] == '[':                
-                    result.append(self.processLeftBracket())
-                elif self.jsonString[self.idx] == ']':                
-                    result.append(self.processRightBracket())
-                elif self.jsonString[self.idx] == ':':                
-                    result.append(self.processColon())    
-                elif self.jsonString[self.idx] == 't':                
-                    result.append(self.processTrue())
-                elif self.jsonString[self.idx] == 'f':                
-                    result.append(self.processFalse())
-                elif self.jsonString[self.idx] == 'n':                
-                    result.append(self.processNull())        
-                elif self.jsonString[self.idx] == ' ':
-                    self.increaseIndex()
-                if self.isOnEndOfString():
-                    exit = True
-        except ScanError, e:
-            print 'scan error'
-            return []
+        
+        while not exit:        
+            if self.jsonString[self.idx] == '{':
+                result.append(self._processLeftCurly())
+            elif self.jsonString[self.idx] == '}':
+                result.append(self._processRightCurly())
+            elif self.jsonString[self.idx] == '"':                
+                result.append(self._processString())
+            elif self.jsonString[self.idx] == '[':                
+                result.append(self._processLeftBracket())
+            elif self.jsonString[self.idx] == ']':                
+                result.append(self._processRightBracket())
+            elif self.jsonString[self.idx] == ':':                
+                result.append(self._processColon())    
+            elif self.jsonString[self.idx] == 't':                
+                result.append(self._processTrue())
+            elif self.jsonString[self.idx] == 'f':                
+                result.append(self._processFalse())
+            elif self.jsonString[self.idx] == 'n':                
+                result.append(self._processNull())        
+            elif self.jsonString[self.idx] == ',':                
+                result.append(self._processComma())
+            elif self.jsonString[self.idx] == ' ':
+                self._increaseIndex()
+            if self._isOnEndOfString():
+                exit = True        
         return result        
             
-    def processLeftCurly(self):
-        self.increaseIndex()
+    def _processLeftCurly(self):
+        self._increaseIndex()
         return JsonToken(JsonToken.LCURLY, '{')
     
-    def processRightCurly(self):
-        self.increaseIndex()
+    def _processRightCurly(self):
+        self._increaseIndex()
         return JsonToken(JsonToken.RCURLY, '}')
     
-    def processLeftBracket(self):
-        self.increaseIndex()
+    def _processLeftBracket(self):
+        self._increaseIndex()
         return JsonToken(JsonToken.LBRACKET, '[')
         
-    def processRightBracket(self):
-        self.increaseIndex()
+    def _processRightBracket(self):
+        self._increaseIndex()
         return JsonToken(JsonToken.RBRACKET, ']')    
         
-    def processColon(self):
-        self.increaseIndex()
+    def _processColon(self):
+        self._increaseIndex()
         return JsonToken(JsonToken.COLON, ':')    
+    
+    def _processComma(self):
+        self._increaseIndex()
+        return JsonToken(JsonToken.COMMA, ',')
         
-    def processString(self):
+    def _processString(self):
         charList = []        
-        nextChar = self.getNextChar()
+        nextChar = self._getNextChar()
         while not nextChar == '"':                        
             charList.append(self.jsonString[self.idx])            
-            nextChar = self.getNextChar()
-        self.increaseIndex()
-        return JsonToken(JsonToken.STRING, string.join(charList,''))
+            nextChar = self._getNextChar()
+        self._increaseIndex()
+        return JsonToken(JsonToken.STRING, ''.join(charList))
         
-    def processTrue(self):
+    def _processTrue(self):
         trueVal = self.jsonString[self.idx:self.idx+4]
         if trueVal == 'true':
             self.idx += 4
@@ -89,7 +102,7 @@ class Tokenizer:
         else:
             raise ScanError(self.idx)
     
-    def processFalse(self):
+    def _processFalse(self):
         falseVal = self.jsonString[self.idx:self.idx+5]
         if falseVal == 'false':
             self.idx += 5
@@ -97,7 +110,7 @@ class Tokenizer:
         else:
             raise ScanError(self.idx)
     
-    def processNull(self):
+    def _processNull(self):
         nullVal = self.jsonString[self.idx:self.idx+4]
         if nullVal == 'null':
             self.idx += 4
@@ -105,23 +118,24 @@ class Tokenizer:
         else:
             raise ScanError(self.idx)
     
-    def isInteger(self, val):
+    def _isInteger(self, val):
         try:
             int(val)
             return True
         except ValueError:
             return False
-    def increaseIndex(self):
+        
+    def _increaseIndex(self):
         self.idx = self.idx + 1
     
-    def getNextChar(self):
+    def _getNextChar(self):
         if (self.idx + 1) < len(self.jsonString):
-            self.increaseIndex()
+            self._increaseIndex()
             return self.jsonString[self.idx]
         else : 
             raise ScanError()
         
-    def isOnEndOfString(self):
+    def _isOnEndOfString(self):
         return self.idx == len(self.jsonString)
         
 class ScanError(Exception):
