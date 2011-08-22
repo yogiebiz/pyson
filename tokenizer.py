@@ -25,6 +25,9 @@ class JsonToken:
     def kind(self):
         return self.kind
     
+allDigit = ['0','1','2','3','4','5','6','7','8','9']
+digitWithoutZero = ['1','2','3','4','5','6','7','8','9']
+
 class Tokenizer:
     def __init__(self,jsonString):
         self.idx = 0
@@ -55,6 +58,8 @@ class Tokenizer:
                 result.append(self._processNull())        
             elif self.jsonString[self.idx] == ',':                
                 result.append(self._processComma())
+            elif self.jsonString[self.idx] == '-' or self.jsonString[self.idx] in ['0','1','2','3','4','5','6','7','8','9']:                
+                result.append(self._processNumber())
             elif self.jsonString[self.idx] == ' ':
                 self._increaseIndex()
             if self._isOnEndOfString():
@@ -117,6 +122,54 @@ class Tokenizer:
             return JsonToken(JsonToken.NULL, 'null')
         else:
             raise ScanError(self.idx)
+        
+    def _processNumber(self):
+        digits = []
+        if self._getCurrentChar() == '-':
+            digits.append('-')
+            self._getNextChar()
+        digits.append(self._processNumberOnly())
+        return JsonToken(JsonToken.NUMBER, ''.join(digits))
+        
+    def _processNumberOnly(self):
+        digits = []         
+        if self._getCurrentChar() == '0':
+            digits.append('0')
+            self._getNextChar()
+        elif self._getCurrentChar() in digitWithoutZero :
+            digits.append(self._collectNumber())
+        else:
+            raise ScanError(self.idx)
+                
+        if self._getCurrentChar() == '.':
+            if self._getNextChar() in allDigit:
+                digits.append('.')
+                digits.append(self._collectNumber())
+            else:
+                raise ScanError(self.idx) 
+        
+        if self._getCurrentChar() in ['e','E']:
+            digits.append(self._getCurrentChar())
+            nextChar = self._getNextChar()
+            if nextChar in ['+', '-']:
+                digits.append(nextChar)
+                self._getNextChar()
+            elif nextChar in allDigit:
+                pass
+            else:
+                raise ScanError(self.idx)
+            if self._getCurrentChar() in allDigit:
+                digits.append(self._collectNumber())
+            else:
+                raise ScanError(self.idx)
+        return ''.join(digits)
+        
+    def _collectNumber(self):
+        digits = []
+        digits.append(self._getCurrentChar())
+        while self._getNextChar() in allDigit :
+            digits.append(self._getCurrentChar())
+        return ''.join(digits)             
     
     def _isInteger(self, val):
         try:
@@ -127,6 +180,9 @@ class Tokenizer:
         
     def _increaseIndex(self):
         self.idx = self.idx + 1
+    
+    def _getCurrentChar(self):
+        return self.jsonString[self.idx]
     
     def _getNextChar(self):
         if (self.idx + 1) < len(self.jsonString):

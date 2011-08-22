@@ -28,6 +28,33 @@ class TokenizerTest(unittest.TestCase):
         
         
         tokenizer = Tokenizer('{"aha:')
-        self.assertRaises(ScanError, tokenizer.tokenize)            
+        self.assertRaises(ScanError, tokenizer.tokenize)
+        
+        tokenizer = Tokenizer("123}")
+        tokens = tokenizer.tokenize()
+        self.assertEqual(tokens[0].text,"123")
+        self.assertEqual(tokens[0].kind,JsonToken.NUMBER)
+        
+        tokenizer = Tokenizer("123.45}")
+        tokens = tokenizer.tokenize()
+        self.assertEqual(tokens[0].text,"123.45")
+        self.assertEqual(tokens[0].kind,JsonToken.NUMBER)
+        
+        tokenizer = Tokenizer("-123}")
+        tokens = tokenizer.tokenize()
+        self.assertEqual(tokens[0].text,"-123")
+        self.assertEqual(tokens[0].kind,JsonToken.NUMBER)
+        
+        tokenizer = Tokenizer("123e+12}")
+        tokens = tokenizer.tokenize()
+        self.assertEqual(tokens[0].text,"123e+12")
+        self.assertEqual(tokens[0].kind,JsonToken.NUMBER)
+        
+        tokenizer = Tokenizer("-123e+12}")
+        tokens = tokenizer.tokenize()
+        self.assertEqual(tokens[0].text,"-123e+12")
+        self.assertEqual(tokens[0].kind,JsonToken.NUMBER)
+        
+                   
         
         
