@@ -1,1 +1,8 @@
-Test readme
+A Python JSON parser
+
+Usage:
+import pyson
+result = pyson.parse('{"a":1}')
+
+#result is a python directory with corresponding key with the json string
+
