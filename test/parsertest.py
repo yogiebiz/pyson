@@ -45,3 +45,11 @@ class ParserTest(unittest.TestCase):
         result = parser.parse(text)
         self.assertEqual(result,{"a":True, "b" : {"a":1,"b":2}})
         
+        text = '{"a": true, "b": ["a",1, "b", 2]}'
+        result = parser.parse(text)
+        self.assertEqual(result,{"a":True, "b" : ["a",1,"b",2]})
+        
+        text = '{"a": [1,2,"aha"]}'
+        result = parser.parse(text)
+        self.assertEqual(result,{"a":[1,2,"aha"]})
+        

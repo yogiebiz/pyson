@@ -51,7 +51,18 @@ class JsonParser:
 			return None
 				
 	def _processArray(self):
-		pass
+		token = self._getNextToken()
+		obj = []
+		while True:
+			if token.kind == JsonToken.RBRACKET :
+				break
+			elif token.kind == JsonToken.COMMA :
+				token = self._getNextToken()
+			else:
+				val = self._processValue()
+				obj.append(val)
+				token = self._getNextToken()
+		return obj
 	
 	def _start(self):
 		jsonObject = self._processObject()
